@@ -1,0 +1,25 @@
+<input type="hidden" id="user_id" value={{ user_id }} />
+<input type="hidden" id="user_name" value={{ user_name }} />
+<form method="post">
+	{% csrf_token %}
+	user: <input id="user" type="text" name="username">
+	message: <input id="message" type="text" name="message"><br>
+	<input id="submit_button" type="button" value="Submit" />
+</form>
+{% include 'javascript/talk_js.html' %}
+<br>
+<div id='messages'>
+	{% for message in messages %}
+		<div>
+			<p>
+				{{ message.0 }}
+			</p>
+			<p>
+				sender: {{ message.1 }}
+			</p>
+			<p>
+				message: {{ message.2 }}
+			</p>
+		</div>
+	{% endfor %}
+</div>

@@ -1,0 +1,6 @@
+<p>Hello, please enter your user name</p>
+<form action="{% url 'talk' %}" method="post">
+	{% csrf_token %}
+	username: <input type="text" name="username"><br>
+	<input type="submit" value="Submit">
+</form>

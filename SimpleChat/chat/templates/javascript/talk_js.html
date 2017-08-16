@@ -1,0 +1,76 @@
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+<script>
+	function getCookie(name) {
+	    var cookieValue = null;
+	    if (document.cookie && document.cookie != '') {
+	        var cookies = document.cookie.split(';');
+	        for (var i = 0; i < cookies.length; i++) {
+	            var cookie = jQuery.trim(cookies[i]);
+	            // Does this cookie string begin with the name we want?
+	            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+	                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+	                break;
+	            }
+	        }
+	    }
+	    return cookieValue;
+	}
+
+	$(document).ready(function() {
+		var sender_id = $("#user_id").val();
+		var sender_name = $("#user_name").val();
+		var sockets = {};
+		var node_socket = new WebSocket("ws://" + window.location.host + "/connection/" + sender_name);
+		node_socket.onmessage = function(event) {
+			data = JSON.parse(event.data);
+			var chat_name = data.receiver_name;
+			if (sender_name == chat_name) {
+				$("#messages").append("<div><p>" + data.timestamp + "</p><p>sender:" + data.sender_name + "</p><p>message:" + data.message + "</p></div>")
+			}
+		}					
+
+		$("#submit_button").click(function() {
+			var name = $("#user").val();
+			var message = $("#message").val();
+
+			var csrftoken = getCookie('csrftoken');
+
+			function csrfSafeMethod(method) {
+			    // these HTTP methods do not require CSRF protection
+			    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+			}
+
+			$.ajaxSetup({
+			    beforeSend: function(xhr, settings) {
+			        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+			            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+			        }
+			    }
+			});
+
+			$.ajax({
+				url: 'ajax/send_message',
+				type: "POST",
+				data: {
+					'username': name,
+					'message': message,
+					'user_id': sender_id,
+					'sender_name': sender_name
+				},
+				dataType: 'json',
+				success: function(data) {
+					if (data.success) {
+						var socket = node_socket
+						result = {
+							"timestamp": data.timestamp,
+							"sender_name": data.sender_name,
+							"receiver_name": data.receiver_name,
+							"message": data.message
+						}
+						socket.send(JSON.stringify(result));
+					}
+				}
+			});
+		});
+	});
+</script>
